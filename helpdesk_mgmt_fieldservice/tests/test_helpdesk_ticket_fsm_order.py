@@ -130,7 +130,6 @@ class TestHelpdeskTicketFSMOrder(SavepointCase):
             action_complete_last_order["context"],
             {
                 "default_ticket_id": self.ticket_1.id,
-                "default_team_id": self.team_id.id,
                 "default_resolution": "Just another resolution",
             },
         )
