@@ -9,6 +9,11 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        cls.Partner = cls.env["res.partner"]
+        cls.Ticket = cls.env["helpdesk.ticket"]
+        cls.TicketTeam = cls.env["helpdesk.ticket.team"]
+
         cls.ticket = cls.ticket_a_unassigned
 
     @staticmethod
@@ -19,7 +24,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
         return None
 
     def test_helpdesk_ticket_team_company(self):
-        ticket_a = self.env["helpdesk.ticket"].create(
+        ticket_a = self.Ticket.create(
             {
                 "name": "Test ticket A",
                 "team_id": self.team_a.id,
@@ -28,7 +33,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
         )
         self.assertEqual(ticket_a.company_id, self.company)
         self.team_b.company_id = False
-        ticket_b = self.env["helpdesk.ticket"].create(
+        ticket_b = self.Ticket.create(
             {
                 "name": "Test ticket b",
                 "team_id": self.team_b.id,
@@ -39,32 +44,22 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
 
     def test_helpdesk_ticket_team_company_extra(self):
         company = self.env["res.company"].create({"name": "Test company"})
-        team = self.env["helpdesk.ticket.team"].create(
-            {"name": "Test team", "company_id": False}
-        )
-        ticket = (
-            self.env["helpdesk.ticket"]
-            .with_company(company)
-            .create(
-                {
-                    "name": "Test ticket",
-                    "team_id": team.id,
-                    "description": "description",
-                }
-            )
+        team = self.TicketTeam.create({"name": "Test team", "company_id": False})
+        ticket = self.Ticket.with_company(company).create(
+            {
+                "name": "Test ticket",
+                "team_id": team.id,
+                "description": "description",
+            }
         )
         self.assertEqual(ticket.company_id, company)
         team.company_id = self.company
-        ticket = (
-            self.env["helpdesk.ticket"]
-            .with_company(company)
-            .create(
-                {
-                    "name": "Test ticket",
-                    "team_id": team.id,
-                    "description": "description",
-                }
-            )
+        ticket = self.Ticket.with_company(company).create(
+            {
+                "name": "Test ticket",
+                "team_id": team.id,
+                "description": "description",
+            }
         )
         self.assertEqual(ticket.company_id, self.company)
 
@@ -119,10 +114,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
         )
 
     def test_helpdesk_ticket_message_new(self):
-        Partner = self.env["res.partner"]
-        Ticket = self.env["helpdesk.ticket"]
-
-        newPartner = Partner.create(
+        newPartner = self.Partner.create(
             {
                 "name": "Jill",
                 "email": "jill@example.com",
@@ -142,7 +134,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
             "date": "2021-10-10",
         }
         try:
-            t = Ticket.message_new(msg_dict)
+            t = self.Ticket.message_new(msg_dict)
         except Exception as error:
             self.fail("%s: %s" % (type(error), error))
         self.assertEqual(t.name, title, "The ticket should have the correct title.")
@@ -163,7 +155,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
             "helpdesk_mgmt.helpdesk_ticket_stage_in_progress"
         )
         in_progress_stage.team_ids = [(6, 0, [self.team_b.id])]
-        new_ticket = self.env["helpdesk.ticket"].create(
+        new_ticket = self.Ticket.create(
             {
                 "name": "New Ticket",
                 "description": "Description",
@@ -181,7 +173,7 @@ class TestHelpdeskTicket(TestHelpdeskTicketBase):
         self.assertEqual(new_ticket.stage_id, self.new_stage)
 
     def test_ticket_without_team(self):
-        new_ticket = self.env["helpdesk.ticket"].create(
+        new_ticket = self.Ticket.create(
             {
                 "name": "New Ticket",
                 "description": "Description",
